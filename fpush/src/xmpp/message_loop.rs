@@ -174,39 +174,79 @@ async fn handle_push_result(
 }
 
 #[inline(always)]
+// fn parse_token_and_module_id(iq_payload: Element) -> Result<(String, String)> {
+//     if let Ok(pubsub) = PubSub::try_from(iq_payload) {
+//         match pubsub {
+//             PubSub::Publish {
+//                 publish: pubsub_payload,
+//                 publish_options: None,
+//             } => Ok(("default".to_string(), pubsub_payload.node.0)),
+//             PubSub::Publish {
+//                 publish: pubsub_payload,
+//                 publish_options: Some(publish_options),
+//             } => {
+//                 if let Some(data_forms) = publish_options.form {
+//                     if data_forms.fields.len() > 5 {
+//                         return Err(Error::PubSubToManyPublishOptions);
+//                     }
+//                     for field in data_forms.fields {
+//                         if field.var == "pushModule" {
+//                             if field.values.len() != 1 {
+//                                 return Err(Error::PubSubInvalidPushModuleConfiguration);
+//                             }
+//                             if let Some(push_module_id) = field.values.first() {
+//                                 return Ok((push_module_id.to_string(), pubsub_payload.node.0));
+//                             } else {
+//                                 unreachable!();
+//                             }
+//                         }
+//                     }
+//                 }
+//                 Ok(("default".to_string(), pubsub_payload.node.0))
+//             }
+//             _ => Err(Error::PubSubNonPublish),
+//         }
+//     } else {
+//         Err(Error::PubSubInvalidFormat)
+//     }
+// }
 fn parse_token_and_module_id(iq_payload: Element) -> Result<(String, String)> {
-    if let Ok(pubsub) = PubSub::try_from(iq_payload) {
-        match pubsub {
-            PubSub::Publish {
-                publish: pubsub_payload,
-                publish_options: None,
-            } => Ok(("default".to_string(), pubsub_payload.node.0)),
-            PubSub::Publish {
-                publish: pubsub_payload,
-                publish_options: Some(publish_options),
-            } => {
-                if let Some(data_forms) = publish_options.form {
-                    if data_forms.fields.len() > 5 {
-                        return Err(Error::PubSubToManyPublishOptions);
-                    }
-                    for field in data_forms.fields {
-                        if field.var == "pushModule" {
-                            if field.values.len() != 1 {
-                                return Err(Error::PubSubInvalidPushModuleConfiguration);
-                            }
-                            if let Some(push_module_id) = field.values.first() {
-                                return Ok((push_module_id.to_string(), pubsub_payload.node.0));
-                            } else {
-                                unreachable!();
+    match PubSub::try_from(iq_payload) {
+        Ok(pubsub) => {
+            match pubsub {
+                PubSub::Publish {
+                    publish: pubsub_payload,
+                    publish_options: None,
+                } => Ok(("default".to_string(), pubsub_payload.node.0)),
+                PubSub::Publish {
+                    publish: pubsub_payload,
+                    publish_options: Some(publish_options),
+                } => {
+                    if let Some(data_forms) = publish_options.form {
+                        if data_forms.fields.len() > 5 {
+                            return Err(Error::PubSubToManyPublishOptions);
+                        }
+                        for field in data_forms.fields {
+                            if field.var == "pushModule" {
+                                if field.values.len() != 1 {
+                                    return Err(Error::PubSubInvalidPushModuleConfiguration);
+                                }
+                                if let Some(push_module_id) = field.values.first() {
+                                    return Ok((push_module_id.to_string(), pubsub_payload.node.0));
+                                } else {
+                                    unreachable!();
+                                }
                             }
                         }
                     }
+                    Ok(("default".to_string(), pubsub_payload.node.0))
                 }
-                Ok(("default".to_string(), pubsub_payload.node.0))
+                _ => Err(Error::PubSubNonPublish),
             }
-            _ => Err(Error::PubSubNonPublish),
         }
-    } else {
-        Err(Error::PubSubInvalidFormat)
+        Err(e) => {
+            error!("Could not parse pubsub: {}", e);
+            Err(Error::PubSubInvalidFormat)
+        }
     }
 }
