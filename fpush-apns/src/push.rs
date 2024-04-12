@@ -56,6 +56,7 @@ impl PushTrait for FpushApns {
             .set_body("New Message?")
             .set_mutable_content()
             .set_sound("default");
+        debug!("Sending push to topic: {}", self.topic);
         let payload = notification_builder.build(
             &token,
             NotificationOptions {
