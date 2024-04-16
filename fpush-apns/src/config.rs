@@ -5,6 +5,8 @@ use serde::Deserialize;
 pub struct AppleApnsConfig {
     cert_file_path: String,
     cert_password: String,
+    notification_title: String,
+    notification_body: String,
     topic: String,
     #[serde(default = "ApnsEndpoint::production")]
     environment: ApnsEndpoint,
@@ -21,6 +23,14 @@ impl AppleApnsConfig {
 
     pub fn topic(&self) -> &str {
         &self.topic
+    }
+
+    pub fn notification_title(&self) -> &str {
+        &self.notification_title
+    }
+
+    pub fn notification_body(&self) -> &str {
+        &self.notification_body
     }
 
     pub fn endpoint(&self) -> a2::Endpoint {

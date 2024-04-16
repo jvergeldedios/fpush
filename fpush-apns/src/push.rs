@@ -13,6 +13,8 @@ use crate::AppleApnsConfig;
 pub struct FpushApns {
     apns: a2::client::Client,
     topic: String,
+    notification_title: String,
+    notification_body: String,
 }
 
 impl FpushApns {
@@ -35,6 +37,8 @@ impl FpushApns {
                 let wrapped_conn = Self {
                     apns: apns_conn,
                     topic: apns_config.topic().to_string(),
+                    notification_title: apns_config.notification_title().to_string(),
+                    notification_body: apns_config.notification_body().to_string(),
                 };
                 Ok(wrapped_conn)
             }
@@ -52,11 +56,12 @@ impl PushTrait for FpushApns {
     #[inline(always)]
     async fn send(&self, token: String) -> PushResult<()> {
         let notification_builder = DefaultNotificationBuilder::new()
-            .set_title("New Message")
-            .set_body("New Message?")
+            .set_title(&self.notification_title)
+            .set_body(&self.notification_body)
             .set_mutable_content()
+            .set_content_available()
             .set_sound("default");
-        debug!("Sending push to topic: {}", self.topic);
+        debug!("Sending push to topic: {}", &self.topic);
         let payload = notification_builder.build(
             &token,
             NotificationOptions {
